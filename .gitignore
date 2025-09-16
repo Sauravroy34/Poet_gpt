@@ -1,1 +1,5 @@
-models
+model
+data
+__pycache__
+logs
+results
