@@ -66,6 +66,13 @@ Relative to be checked, and asexualerdi nightnightnightnightfalled; I'm notinged
 2) Train the transformer for a larger number of epochs
 3) Try incorporating [Conditional Diffusion Models with Classifier-Free Gibbs-like Guidance](https://arxiv.org/abs/2505.21101) to generate higher quality and diverse samples
 
+## Steps to train
+### Training the language encoder 
+run `python3 bart_latent_model.py`
+
+### Training the diffusion model
+run `python3 diffusion.py`
+
 
 
 
