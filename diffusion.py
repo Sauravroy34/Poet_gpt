@@ -154,40 +154,41 @@ transformer = SanaTransformer2DModel.from_config(config)
 # Move the main training model to the selected device
 transformer.to(device)
 
-poem_dirs = ["forms", "topics"]
-data = PoemDiffusionDataset(poem_dirs=poem_dirs)
-optimizer = torch.optim.AdamW(transformer.parameters(), lr=5e-5)
-data_loader = DataLoader(data, batch_size=32)
 
-# --- Training Loop ---
-epochs = 1
-for e in range(epochs):
-    transformer.train()
-    for step, batch in enumerate(data_loader):
-        # 2. Move data batch to the selected device
-        latents = batch["diffusion_latent"].to(device)
-        prompt_embeds = batch["prompt_embeds"].to(device)
-        prompt_attention_mask = batch["prompt_attention_mask"].to(device)
+if __name__ == "main":
+    poem_dirs = ["forms", "topics"]
+    data = PoemDiffusionDataset(poem_dirs=poem_dirs)
+    optimizer = torch.optim.AdamW(transformer.parameters(), lr=5e-5)
+    data_loader = DataLoader(data, batch_size=32)
+
+    epochs = 1
+    for e in range(epochs):
+        transformer.train()
+        for step, batch in enumerate(data_loader):
+            # 2. Move data batch to the selected device
+            latents = batch["diffusion_latent"].to(device)
+            prompt_embeds = batch["prompt_embeds"].to(device)
+            prompt_attention_mask = batch["prompt_attention_mask"].to(device)
+            
+            # Use latents.shape[0] to handle the last batch which might be smaller than 32
+            batch_size = latents.shape[0]
+            latents = latents.view(batch_size, 32, 16, 4)
+            
+            latents_noisy, timestep, noise = add_random_noise(latents)
+            
+            noise_pred = transformer(
+                hidden_states=latents_noisy, 
+                encoder_hidden_states=prompt_embeds, 
+                encoder_attention_mask=prompt_attention_mask,
+                timestep=timestep, 
+            ).sample
+            
+            optimizer.zero_grad()
+            loss = F.mse_loss(noise_pred, noise)
+            loss.backward()    
+            grad_norm = torch.nn.utils.clip_grad_norm_(transformer.parameters(), 1.0)
+            optimizer.step()
         
-        # Use latents.shape[0] to handle the last batch which might be smaller than 32
-        batch_size = latents.shape[0]
-        latents = latents.view(batch_size, 32, 16, 4)
-        
-        latents_noisy, timestep, noise = add_random_noise(latents)
-        
-        noise_pred = transformer(
-            hidden_states=latents_noisy, 
-            encoder_hidden_states=prompt_embeds, 
-            encoder_attention_mask=prompt_attention_mask,
-            timestep=timestep, 
-        ).sample
-        
-        optimizer.zero_grad()
-        loss = F.mse_loss(noise_pred, noise)
-        loss.backward()    
-        grad_norm = torch.nn.utils.clip_grad_norm_(transformer.parameters(), 1.0)
-        optimizer.step()
-    
-        if step % 10 == 0:
-            # .item() moves the loss value from GPU to CPU for printing
-            print(f"Epoch {e+1}, Step {step+1}, Loss: {loss.item():.4f}")
+            if step % 10 == 0:
+                # .item() moves the loss value from GPU to CPU for printing
+                print(f"Epoch {e+1}, Step {step+1}, Loss: {loss.item():.4f}")

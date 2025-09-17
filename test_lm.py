@@ -21,13 +21,13 @@ model  = BARTForConditionalGenerationLatent.from_pretrained(
     model_name,
     config = config,
     num_encoder_latents=32, 
-    num_decoder_latents=32, # Typically same as encoder latents
+    num_decoder_latents=32, 
     dim_ae=64,
-    num_layers=3, # Number of layers in compression/reconstruction networks 
+    num_layers=3, 
     l2_normalize_latents=True
 )
 
-model.perceiver_ae.load_state_dict(torch.load("perceiver_ae_weights3.pth",map_location = torch.device('cpu')))
+model.perceiver_ae.load_state_dict(torch.load("model/perceiver_ae_weights3.pth",map_location = torch.device('cpu')))
 
 model.eval()
 
@@ -46,16 +46,12 @@ def reconstruct_text(text, model, tokenizer):
     input_ids = inputs.input_ids
     attention_mask = inputs.attention_mask
 
-    # Perform the full autoencoding process within a no_grad() block for efficiency
     with torch.no_grad():
-        # Get initial encoder outputs from the frozen BART encoder
         encoder_outputs = model.get_encoder()(
             input_ids=input_ids,
             attention_mask=attention_mask
         )
         
-
-        # 1. Get the compressed latent vector (32x64) from the encoder's output
         diffusion_latent = model.get_diffusion_latent(
             encoder_outputs, attention_mask
         )
@@ -77,12 +73,12 @@ def reconstruct_text(text, model, tokenizer):
             max_length=64,
             early_stopping=True
         )
-    print(len(generated_ids))
-    reconstructed_text = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
+    print(tokenizer.decode(generated_ids[0], skip_special_tokens=True))
+    
+if __name__ == "main":
+    test_sentence_1 = "absdasdfasf232324231324.']"
+    test_sentence_2 = "In the heart of the ancient forest, a hidden waterfall cascades into a crystal-clear pool."
 
-test_sentence_1 = "absdasdfasf232324231324.']"
-test_sentence_2 = "In the heart of the ancient forest, a hidden waterfall cascades into a crystal-clear pool."
-with open("AbecedarianPoemsManShapedWindTheAbecedarianPoembyJaeyPeele.txt") as f:
-    poem = f.read()
+    reconstruct_text(test_sentence_1, model, tokenizer ) 
+    reconstruct_text(test_sentence_2, model, tokenizer ) 
 
-reconstruct_text(poem, model, tokenizer ) 

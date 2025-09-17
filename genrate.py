@@ -76,7 +76,7 @@ def encode_prompt(prompt, tokenizer=tokenizer_encode, text_encoder=text_encoder,
 
 
 
-def generate(prompt, transformer = transformer, tokenizer=tokenizer_lm,num_steps = 10, latent_dim = [1, 32, 16, 4], guidance_scale = 2, neg_prompt = "", seed=None, max_prompt_tok=50, add_special_tokens=False):
+def generate(prompt, transformer = transformer, tokenizer=tokenizer_lm,num_steps = 10, latent_dim = [1, 32, 16, 4], guidance_scale = 3, neg_prompt = "", seed=None, max_prompt_tok=50, add_special_tokens=False):
     device, dtype = transformer.device, transformer.dtype
     do_cfg = guidance_scale is not None
 
@@ -146,6 +146,6 @@ def generate(prompt, transformer = transformer, tokenizer=tokenizer_lm,num_steps
         return reconstructed_text
 
 print("\n"*4)
-print(generate("WorldPoemsThePaganWorldPoembyMatthewArnold"))
+print(generate("Romance"))
 
 

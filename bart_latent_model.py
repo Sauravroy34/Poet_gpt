@@ -44,7 +44,7 @@ class BARTForConditionalGenerationLatent(BartForConditionalGeneration):
         encoder_outputs['last_hidden_state'] = self.get_decoder_input(diffusion_latent)
         
         return encoder_outputs
-    
+print("\n"*20)
 if __name__ == "main":
     model_name = "facebook/bart-base"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
